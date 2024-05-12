@@ -1,10 +1,13 @@
 {% comment %}
   Renders product variant options
+
   Accepts:
   - product: {Object} product object.
   - option: {Object} current product_option object.
   - block: {Object} block object.
   - picker_type: {String} type of picker to dispay
+
+
   Usage:
   {% render 'product-variant-options',
     product: product,
@@ -55,6 +58,21 @@
     endif
   -%}
 
+  {% for variant in product.variants %}
+    {% if variant.option1 == 'Color' %}
+      <div class="color-swatches">
+        {% for color_variant in product.variants %}
+          {% if color_variant.option1 == 'Color' and color_variant.id != variant.id %}
+            <button class="color-swatch" data-variant-id="{{ color_variant.id }}">
+              <img src="{{ color_variant.featured_image.src | asset_url }}" alt="{{ color_variant.option2 }}">
+            </button>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+    {% endif %}
+  {% endfor %}
+  
   {%- capture input_id -%}
     {{ section.id }}-{{ option.position }}-{{ forloop.index0 -}}
   {%- endcapture -%}
@@ -93,6 +111,7 @@
       type="radio"
       id="{{ input_id }}"
       name="{{ option.name }}"
+      image= "{{image_url}}"
       value="{{ value | escape }}"
       form="{{ product_form_id }}"
       {% if option.selected_value == value %}
@@ -102,10 +121,17 @@
         class="disabled"
       {% endif %}
     >
-    <label for="{{ input_id }}">
-      {{ value -}}
-      {{ label_unavailable }}
-    </label>
+    {% if product.variants[forloop.index0].image != blank and option.name == 'Color' %}
+      <label
+        for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
+        style="background-image: url({{ product.variants[forloop.index0].image | img_url: '' }});height:40px;width:40px;background-size: cover;"
+      ></label>
+    {% else %}
+      <label for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}">
+        {{ value -}}
+        <span class="visually-hidden">{{ 'products.product.variant_sold_out_or_unavailable' | t }}</span>
+      </label>
+    {% endif %}
   {%- elsif picker_type == 'dropdown' or picker_type == 'swatch_dropdown' -%}
     <option
       value="{{ value | escape }}"
